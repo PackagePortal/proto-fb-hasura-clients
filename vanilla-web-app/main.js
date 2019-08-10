@@ -17,11 +17,36 @@ document.getElementById('login-form').onsubmit = function(event) {
   login(email, pass);
 };
 
-
 document.getElementById('get-token').onclick = function(event) {
   event.preventDefault();
   firebase.auth().currentUser.getIdToken(true).
     then(token => document.getElementById('id-token').innerHTML = token);
+};
+
+document.getElementById('scan').onclick = async (event) => {
+  event.preventDefault();
+  const token = await firebase.auth().currentUser.getIdToken(true);
+  const body = {
+    query: `mutation {
+      insert_scans(objects: {tracking_number: "${Math.random()}"}) {
+        returning {
+          tracking_number
+        }
+      }
+    }`
+  };
+  const settings = {
+        method: 'POST',
+        headers: {
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`,
+        },
+        body: JSON.stringify(body),
+    };
+  const response = await fetch('https://pp-api-dev.herokuapp.com/v1/graphql', settings);
+  const json = await response.json();
+  console.log(json);
 };
 
 function login(email, password) {
